@@ -20,6 +20,7 @@ class mainModel
 
     //funcion para conectar a la base de datos
     //protected --> solo se va poder usar en esta clase y en las clases que heredan
+    /*----------  Funcion conectar a BD  ----------*/
     protected function conectar()
     {
         //conexion a la base de datos
@@ -31,6 +32,7 @@ class mainModel
     }
 
     //funcion para hacer consultas a la base de datos
+    /*----------  Funcion ejecutar consultas  ----------*/
     protected function ejecutarConsulta($consulta)
     {
         //con this accedemos a todas las funciones o variables de la clase
@@ -43,6 +45,7 @@ class mainModel
 
 
     //funcion para evitar inyeccion sql /filtro
+    /*----------  Funcion limpiar cadenas  ----------*/
     public function limpiarCadena($cadena)
     {
 
@@ -73,21 +76,91 @@ class mainModel
             "::"
         ];
 
-        $cadena=trim($cadena);
-        $cadena=stripslashes($cadena);
+        $cadena = trim($cadena);
+        $cadena = stripslashes($cadena);
 
 
-        foreach($palabras as $palabra){
-            $cadena=str_ireplace($palabra, "", $cadena);
+        foreach ($palabras as $palabra) {
+            $cadena = str_ireplace($palabra, "", $cadena);
         }
 
-        $cadena=trim($cadena);
-        $cadena=stripslashes($cadena);
+        $cadena = trim($cadena);
+        $cadena = stripslashes($cadena);
         return $cadena;
     }
+
+    //modelo
+    /*---------- Funcion verificar datos (expresion regular) ----------*/
+    protected function verificarDatos($filtro, $cadena)
+    {
+        /* "[a-zA-Z0-9$@.-]{7,100}" */
+        if (preg_match("/^" . $filtro . "$/", $cadena)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
+
+    
+    /*----------  Funcion para ejecutar una consulta INSERT preparada  ----------*/
+    /*modelo para guardar o insertar datos */
+    protected function guardarDatos($tabla, $datos)
+    {
+        $query = "INSERT INTO $tabla (";
+
+        $C = 0;
+        foreach ($datos as $clave) {
+            if ($C >= 1) {
+                $query .= ",";
+            }
+            $query .= $clave["campo_nombre"];
+            $C++;
+        }
+
+        $query .= ") VALUES(";
+
+        $C = 0;
+        foreach ($datos as $clave) {
+            if ($C >= 1) {
+                $query .= ",";
+            }
+            $query .= $clave["campo_marcador"];
+            $C++;
+        }
+
+        $query .= ")";
+
+        // preparamos la consulta
+        /* Metodo prepare() de la clase PDO para preparar una consulta SQL. La consulta sql
+        contiene marcadores de párametros con nombres (:name) */
+        $sql = $this->conectar()->prepare($query);
+
+        foreach ($datos as $clave) {
+            /* bindParam() --> metodo que vincula o sustituye de la consulta SQL 
+            un marcador(:name) con el valor real de una variable PHP */
+            $sql->bindParam($clave["campo_marcador"], $clave["campo_valor"]);
+        }
+        /* execute() Metodo que ejecuta una consulta SQL preparada */
+        $sql->execute();
+        /* devolvemos el valor de la variable $sql, para saber en el controlador
+        si hicimos o no la insercion de datos */
+        return $sql;
+
+
+    }
+
+
 }
 
 // https://www.php.net/manual/es/pdo.connections.php
 // https://www.php.net/manual/es/function.trim.php
 // https://www.php.net/manual/es/function.stripslashes.php
 // https://www.php.net/manual/es/function.str-ireplace.php
+// https://www.php.net/manual/es/function.preg-match.php
+
+// https://www.php.net/manual/es/pdo.prepare.php
+// https://www.php.net/manual/es/pdostatement.bindparam.php
+// PDOStatement::bindParam — Vincula un parámetro al nombre de variable especificado 
+// https://www.php.net/manual/es/pdostatement.execute.php
