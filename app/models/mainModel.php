@@ -103,7 +103,7 @@ class mainModel
 
 
 
-    
+
     /*----------  Funcion para ejecutar una consulta INSERT preparada  ----------*/
     /*modelo para guardar o insertar datos */
     protected function guardarDatos($tabla, $datos)
@@ -147,12 +147,41 @@ class mainModel
         /* devolvemos el valor de la variable $sql, para saber en el controlador
         si hicimos o no la insercion de datos */
         return $sql;
-
-
     }
 
 
+
+    /*---------- Funcion seleccionar datos ----------*/
+    public function seleccionarDatos($tipo, $tabla, $campo, $id)
+    {
+        //limpiando cadenas
+        $tipo = $this->limpiarCadena($tipo);
+        $tabla = $this->limpiarCadena($tabla);
+        $campo = $this->limpiarCadena($campo);
+        $id = $this->limpiarCadena($id);
+
+        if ($tipo == "Unico") {
+            /*cuando el valor sea "Unico" en el paramerto $tipo, realizamos una seleccion de datos para un usuario en especifico*/
+            //le pasamos una consulta
+            $sql = $this->conectar()->prepare("SELECT * FROM $tabla WHERE $campo=:ID");
+            /* cambiamos ese marcador por su valor real :ID->$id */
+            $sql->bindParam(":ID", $id);
+        } elseif ($tipo == "Normal") {
+            $sql = $this->conectar()->prepare("SELECT $campo  FROM $tabla");
+            $sql->execute();
+            return $sql;
+        }
+    }
+
+
+    
 }
+
+
+
+
+
+
 
 // https://www.php.net/manual/es/pdo.connections.php
 // https://www.php.net/manual/es/function.trim.php
