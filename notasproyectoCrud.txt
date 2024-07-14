@@ -1,0 +1,56 @@
+<!--Este arhivo es para cambiar las configuraciones del servidor -->
+<!-- RewriteEngine On, sirve para habilitar la sobre escritura de la reglas o directrices de nuestro servidor-->
+<!--Options All -Indexes, para ocultar las carpetas de nuestro proyecto-->
+
+para urls amigables en nuestro sistema --> Rewrite 
+RewriteRule ^()$  aqui usaremos expresiones regulares
+dentro de los parentesis se le indica que vamos hacer un grupo de expresiones 
+^ --> este es el inicio, $--> este es el fin 
+
+
+// el autoload.php se encarga de incluir los archivos de las clase o codigo de las clases
+
+
+//index.php por defecto
+
+<?php
+
+    require_once "./config/app.php";
+    require_once "./autoload.php";
+    /*---------- Iniciando sesion ----------*/
+    require_once "./app/views/inc/session_start.php";
+
+    if (isset($_GET['views'])) {
+        //array url trae todos los valores de la url
+        $url=explode("/",$_GET['views']);
+
+    }else{
+        $url=["login"];
+    }
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <?php require_once "./app/views/inc/head.php";?>
+    
+</head>
+<body>
+    <?php 
+        use app\controllers\viewsController;
+
+        $viewsController = new viewsController();
+        $vista=$viewsController->obtenerVistasControlador($url[0]);
+
+        if ($vista=="login" || $vista="404") {
+                //la variable $vista=archivo de la carpeta content
+            require_once "./app/views/content/".$vista."-view.php";
+
+        }else {
+            require_once $vista;
+        }
+
+        require_once "./app/views/inc/script.php";
+    ?>
+</body>
+</html>

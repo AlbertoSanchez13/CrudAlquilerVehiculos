@@ -1,0 +1,134 @@
+
+
+Explicación de los cambios:
+
+Creamos una clase Logger en app/utils/Logger.php para manejar el logging de manera centralizada.
+En cada archivo principal (viewsModel.php, viewsController.php, index.php), importamos y utilizamos la clase Logger.
+Añadimos llamadas a Logger::log() en puntos críticos del código para registrar información importante:
+
+Al inicio y final de funciones clave.
+Antes y después de operaciones importantes.
+Cuando se toman decisiones basadas en condiciones.
+Cuando se devuelven valores.
+
+
+Utilizamos diferentes niveles de log (INFO, WARNING) según la naturaleza del mensaje.
+
+Para implementar esto:
+
+Crea el directorio logs en la raíz de tu proyecto si no existe ya.
+Asegúrate de que PHP tenga permisos de escritura en este directorio.
+Crea el archivo Logger.php en app/utils/ con el contenido proporcionado.
+Modifica tus archivos existentes como se muestra en el artefacto.
+
+Después de implementar estos cambios, cuando ejecutes tu aplicación, se creará un archivo app.log en el directorio logs. Este archivo contendrá información detallada sobre el flujo de ejecución, lo que te ayudará a identificar dónde pueden estar ocurriendo problemas.
+Para revisar los logs:
+
+Accede al archivo logs/app.log en tu servidor.
+Puedes usar comandos como tail -f logs/app.log en sistemas Unix para ver los logs en tiempo real mientras interactúas con tu aplicación.
+
+Este enfoque de logging te proporcionará una visión más clara de lo que está sucediendo en tu aplicación y te ayudará a identificar por qué no puedes ver tu archivo dashboard-view.php.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Primero, crea un archivo de utilidad para el logging
+// Guarda esto como app/utils/Logger.php
+
+namespace app\utils;
+
+class Logger {
+    public static function log($message, $level = 'INFO') {
+        $logFile = __DIR__ . '/../../logs/app.log';
+        $timestamp = date('Y-m-d H:i:s');
+        $logMessage = "[$timestamp] [$level] $message" . PHP_EOL;
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+    }
+}
+
+// Ahora, modifica tus archivos principales para incluir logging
+
+// En viewsModel.php
+namespace app\models;
+use app\utils\Logger;
+
+class viewsModel {
+    protected function obtenerVistasModelo($vista) {
+        Logger::log("Iniciando obtenerVistasModelo con vista: $vista");
+        $listaBlanca = ["dashboard"];
+        
+        if (in_array($vista, $listaBlanca)) {
+            $ruta = "./app/views/content/" . $vista . "-view.php";
+            Logger::log("Comprobando existencia del archivo: $ruta");
+            if (file_exists($ruta)) {
+                $contenido = $ruta;
+                Logger::log("Archivo encontrado: $ruta");
+            } else {
+                $contenido = "404";
+                Logger::log("Archivo no encontrado, devolviendo 404", 'WARNING');
+            }
+        } elseif ($vista == "login" || $vista == "index") {
+            $contenido = "login";
+            Logger::log("Vista login o index solicitada");
+        } else {
+            $contenido = "404";
+            Logger::log("Vista no reconocida, devolviendo 404", 'WARNING');
+        }
+        
+        Logger::log("obtenerVistasModelo devuelve: $contenido");
+        return $contenido;
+    }
+}
+
+// En viewsController.php
+namespace app\controllers;
+use app\models\viewsModel;
+use app\utils\Logger;
+
+class viewsController extends viewsModel {
+    public function obtenerVistasControlador($vista) {
+        Logger::log("Iniciando obtenerVistasControlador con vista: $vista");
+        if ($vista != "") {
+            $respuesta = $this->obtenerVistasModelo($vista);
+        } else {
+            $respuesta = "login";
+            Logger::log("Vista vacía, devolviendo login por defecto");
+        }
+        Logger::log("obtenerVistasControlador devuelve: $respuesta");
+        return $respuesta;
+    }
+}
+
+// En index.php
+require_once "./config/app.php";
+require_once "./autoload.php";
+require_once "./app/views/inc/session_start.php";
+require_once "./app/utils/Logger.php";
+
+use app\controllers\viewsController;
+use app\utils\Logger;
+
+Logger::log("Iniciando index.php");
+
+$url = isset($_GET['views']) ? explode("/", $_GET['views']) : ["login"];
+Logger::log("URL obtenida: " . implode("/", $url));
+
+$viewsController = new viewsController();
+$vista = $viewsController->obtenerVistasControlador($url[0]);
+Logger::log("Vista después del controlador: $vista");
+
+// ... resto del código ...
+
+Logger::log("Finalizando index.php");
