@@ -33,6 +33,8 @@ $vista = $viewsController->obtenerVistasControlador($url[0]);
     }
     require_once "./app/views/inc/script.php";
     ?>
+
+    
 </body>
 
 </html>
