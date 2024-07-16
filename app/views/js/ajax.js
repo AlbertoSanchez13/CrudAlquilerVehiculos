@@ -40,10 +40,11 @@ formularios_ajax.forEach(formularios => {
                 /* le pasamos el primer parametro que seria la url */
                 /* Api de fetch */
                 fetch(action, config)
-                .then(respuesta => respuesta.json())
-                .them(respuesta => {
-                    return alertas_ajax(respuesta);
-                });
+                    /* aqui convertimos la respuesta en formato .json */
+                    .then(respuesta => respuesta.json()) /* cuando resivamos la respuesta en formato json  */
+                    .them(respuesta => { /* luego se ejecuta lo que esta dentro de las llaves */
+                        return alertas_ajax(respuesta); /* aqui la funcion resive el json */
+                    });
             }
         });
 
@@ -54,12 +55,53 @@ formularios_ajax.forEach(formularios => {
 
 
 
-function alertas_ajax(alerta){
+function alertas_ajax(alerta) {
+
+    if (alerta.tipo == "simple") {
+
+        Swal.fire({
+            icon: alerta.icono,
+            title: alerta.titulo,
+            text: alerta.texto,
+            confirmButtonText: 'Aceptar'
+        });
+    } else if (alerta.tipo == "recargar") {
+
+        Swal.fire({
+            icon: alerta.icono,
+            title: alerta.titulo,
+            text: alerta.texto,
+            confirmButtonText: 'Aceptar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                location.reload();
+            }
+        });
+
+    } else if (alerta.tipo == "limpiar") {
+
+        Swal.fire({
+            icon: alerta.icono,
+            title: alerta.titulo,
+            text: alerta.texto,
+            confirmButtonText: 'Aceptar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.querySelector(".FormularioAjax").reset();
+            }
+        });
+
+        /* aqui el parametro alerta va tener el tipo:"redireccionar" */
+    } else if (alerta.tipo == "redireccionar") {
+
+        window.location.href = alerta.url;
+    }
+
 
 }
 
 
-
+/* Boton cerrar sesion */
 
 
 
