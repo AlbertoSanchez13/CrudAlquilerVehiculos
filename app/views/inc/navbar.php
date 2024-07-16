@@ -44,6 +44,10 @@
                             Buscar
                         </a>
 
+                        <a class="navbar-item" href="<?php echo APP_URL; ?> carList/">
+                            Lista de Autos
+                        </a>
+
                     </div>
                 </div>
             </div>

@@ -8,7 +8,18 @@ class viewsModel
     protected function obtenerVistasModelo($vista)
     {
         //array para manejo de urls permitidas
-        $listaBlanca = ["dashboard", "log", "userNew", "userList"];
+        $listaBlanca = [
+            "dashboard",
+            "log",
+            "userNew",
+            "userList",
+            "userSearch",
+            "userUpdate",
+            "userPhoto",
+            "logOut",
+            "carList"
+
+        ];
 
         //funcion in_array
         //validad si el nombre de la vista existe dentro del array --> devuelve true, caso contrario false
@@ -29,4 +40,3 @@ class viewsModel
         return $contenido;
     }
 }
-
