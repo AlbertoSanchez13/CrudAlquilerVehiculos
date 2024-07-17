@@ -43,7 +43,7 @@
                 <div class="hero-body">
                     <p class="title is-1">Error 404</p>
                     <p class="subtitle is-3">Página no encontrada</p>
-                    <a href="<?php echo APP_URL; ?>" class="button is-primary">Volver al inicio</a>
+                    <a href="<?php echo APP_URL; ?>dashboard/" class="button is-primary">Volver al inicio</a>
                 </div>
             </section>
         </div>

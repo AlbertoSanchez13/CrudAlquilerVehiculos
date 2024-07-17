@@ -31,7 +31,7 @@
 					<label>Usuario</label>
 				  	<input class="input" type="text" name="usuario_usuario" pattern="[a-zA-Z0-9]{4,20}" maxlength="20" required >
 				</div>
-		  	</div>
+		  	</div>	
 		  	<div class="column">
 		    	<div class="control">
 					<label>Email</label>
