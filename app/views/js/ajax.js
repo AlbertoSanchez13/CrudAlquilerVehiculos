@@ -1,10 +1,10 @@
 /* Enviar formularios via AJAX */
-const formularios_ajax = document.querySelectorAll(".FormularioAjax");
+const formularios_ajax=document.querySelectorAll(".FormularioAjax");
 
 formularios_ajax.forEach(formularios => {
 
-    formularios.addEventListener("submit", function (e) {
-
+    formularios.addEventListener("submit",function(e){
+        
         e.preventDefault();
 
         Swal.fire({
@@ -17,34 +17,27 @@ formularios_ajax.forEach(formularios => {
             confirmButtonText: 'Si, realizar',
             cancelButtonText: 'No, cancelar'
         }).then((result) => {
-            if (result.isConfirmed) {
+            if (result.isConfirmed){
 
-                //Array de datos, cuando le demos al si capturamos todos los datos de los imputs
-                //Array de datos, clave valor
                 let data = new FormData(this);
-                let method = this.getAttribute("method");
-                let action = this.getAttibute("action");
+                let method=this.getAttribute("method");
+                let action=this.getAttribute("action");
 
-                let encabezados = new Headers();
+                let encabezados= new Headers();
 
-                //configuraciones de la api de fetch json
-                let config = {
+                let config={
                     method: method,
                     headers: encabezados,
                     mode: 'cors',
                     cache: 'no-cache',
-                    /* body son los datos que queremos enviar */
                     body: data
                 };
 
-                /* le pasamos el primer parametro que seria la url */
-                /* Api de fetch */
-                fetch(action, config)
-                    /* aqui convertimos la respuesta en formato .json */
-                    .then(respuesta => respuesta.json()) /* cuando resivamos la respuesta en formato json  */
-                    .them(respuesta => { /* luego se ejecuta lo que esta dentro de las llaves */
-                        return alertas_ajax(respuesta); /* aqui la funcion resive el json */
-                    });
+                fetch(action,config)
+                .then(respuesta => respuesta.json())
+                .then(respuesta =>{ 
+                    return alertas_ajax(respuesta);
+                });
             }
         });
 
@@ -54,10 +47,8 @@ formularios_ajax.forEach(formularios => {
 
 
 
-
-function alertas_ajax(alerta) {
-
-    if (alerta.tipo == "simple") {
+function alertas_ajax(alerta){
+    if(alerta.tipo=="simple"){
 
         Swal.fire({
             icon: alerta.icono,
@@ -65,7 +56,8 @@ function alertas_ajax(alerta) {
             text: alerta.texto,
             confirmButtonText: 'Aceptar'
         });
-    } else if (alerta.tipo == "recargar") {
+
+    }else if(alerta.tipo=="recargar"){
 
         Swal.fire({
             icon: alerta.icono,
@@ -73,12 +65,12 @@ function alertas_ajax(alerta) {
             text: alerta.texto,
             confirmButtonText: 'Aceptar'
         }).then((result) => {
-            if (result.isConfirmed) {
+            if(result.isConfirmed){
                 location.reload();
             }
         });
 
-    } else if (alerta.tipo == "limpiar") {
+    }else if(alerta.tipo=="limpiar"){
 
         Swal.fire({
             icon: alerta.icono,
@@ -86,42 +78,39 @@ function alertas_ajax(alerta) {
             text: alerta.texto,
             confirmButtonText: 'Aceptar'
         }).then((result) => {
-            if (result.isConfirmed) {
+            if(result.isConfirmed){
                 document.querySelector(".FormularioAjax").reset();
             }
         });
 
-        /* aqui el parametro alerta va tener el tipo:"redireccionar" */
-    } else if (alerta.tipo == "redireccionar") {
-
-        window.location.href = alerta.url;
+    }else if(alerta.tipo=="redireccionar"){
+        window.location.href=alerta.url;
     }
-
-
 }
 
 
+
 /* Boton cerrar sesion */
+let btn_exit=document.getElementById("btn_exit");
 
+btn_exit.addEventListener("click", function(e){
 
+    e.preventDefault();
+    
+    Swal.fire({
+        title: '¿Quieres salir del sistema?',
+        text: "La sesión actual se cerrará y saldrás del sistema",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Si, salir',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let url=this.getAttribute("href");
+            window.location.href=url;
+        }
+    });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach */
+});

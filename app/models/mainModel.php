@@ -1,307 +1,211 @@
 <?php
+	
+	namespace app\models;
+	use \PDO;
 
-// namespace es la ruta donde se encuentra mis archivos Models
-namespace app\models;
+	if(file_exists(__DIR__."/../../config/server.php")){
+		require_once __DIR__."/../../config/server.php";
+	}
 
-use \PDO;
+	class mainModel{
 
-// constante __DIR__ --> esta devuelve la ruta absoluta de donde se encuentra el archivo actualmente
-if (file_exists(__DIR__ . "/../../config/server.php")) {
-    require_once __DIR__ . "/../../config/server.php";
-}
-
-class mainModel
-{
-    // estas variables solo son accesibles dentro de la misma clase por el modificador de acceso private
-    private $server = DB_SERVER;
-    private $db = DB_NAME;
-    private $user = DB_USER;
-    private $pass = DB_PASSWORD;
-
-    //funcion para conectar a la base de datos
-    //protected --> solo se va poder usar en esta clase y en las clases que heredan
-    /*----------  Funcion conectar a BD  ----------*/
-    protected function conectar()
-    {
-        //conexion a la base de datos
-        $conexion = new PDO("mysql:host=" . $this->server . ";dbname=" . $this->db, $this->user, $this->pass);
-        //metodo exec --> para ejecutar
-        //aqui establecemos que vamos a usar caracteres UTF8 en la base de datos
-        $conexion->exec("SET CHARACTER SET utf8");
-        return $conexion;
-    }
-
-    //funcion para hacer consultas a la base de datos
-    /*----------  Funcion ejecutar consultas  ----------*/
-    protected function ejecutarConsulta($consulta)
-    {
-        //con this accedemos a todas las funciones o variables de la clase
-        //funcion prepare --> prepara una consulta para luego ejecutarla  
-        $sql = $this->conectar()->prepare($consulta);
-        //con esto ejecutamos la consulta
-        $sql->execute();
-        return $sql;
-    }
+		private $server=DB_SERVER;
+		private $db=DB_NAME;
+		private $user=DB_USER;
+		private $pass=DB_PASSWORD;
 
 
-    //funcion para evitar inyeccion sql /filtro
-    /*----------  Funcion limpiar cadenas  ----------*/
-    public function limpiarCadena($cadena)
-    {
-
-        $palabras = [
-            "<script>",
-            "</script>",
-            "<script src",
-            "<script type=",
-            "SELECT * FROM",
-            "SELECT ",
-            " SELECT ",
-            "DELETE FROM",
-            "INSERT INTO",
-            "DROP TABLE",
-            "DROP DATABASE",
-            "TRUNCATE TABLE",
-            "SHOW TABLES",
-            "SHOW DATABASES",
-            "<?php",
-            "?>",
-            "--",
-            "^",
-            "<",
-            ">",
-            "==",
-            "=",
-            ";",
-            "::"
-        ];
-
-        $cadena = trim($cadena);
-        $cadena = stripslashes($cadena);
+		/*----------  Funcion conectar a BD  ----------*/
+		protected function conectar(){
+			$conexion = new PDO("mysql:host=".$this->server.";dbname=".$this->db,$this->user,$this->pass);
+			$conexion->exec("SET CHARACTER SET utf8");
+			return $conexion;
+		}
 
 
-        foreach ($palabras as $palabra) {
-            $cadena = str_ireplace($palabra, "", $cadena);
-        }
-
-        $cadena = trim($cadena);
-        $cadena = stripslashes($cadena);
-        return $cadena;
-    }
+		/*----------  Funcion ejecutar consultas  ----------*/
+		protected function ejecutarConsulta($consulta){
+			$sql=$this->conectar()->prepare($consulta);
+			$sql->execute();
+			return $sql;
+		}
 
 
+		/*----------  Funcion limpiar cadenas  ----------*/
+		public function limpiarCadena($cadena){
 
-    //modelo
-    /*---------- Funcion verificar datos (expresion regular) ----------*/
-    protected function verificarDatos($filtro, $cadena)
-    {
-        /* "[a-zA-Z0-9$@.-]{7,100}" */
-        if (preg_match("/^" . $filtro . "$/", $cadena)) {
-            return false;
-        } else {
-            return true;
-        }
-    }
+			$palabras=["<script>","</script>","<script src","<script type=","SELECT * FROM","SELECT "," SELECT ","DELETE FROM","INSERT INTO","DROP TABLE","DROP DATABASE","TRUNCATE TABLE","SHOW TABLES","SHOW DATABASES","<?php","?>","--","^","<",">","==","=",";","::"];
+
+			$cadena=trim($cadena);
+			$cadena=stripslashes($cadena);
+
+			foreach($palabras as $palabra){
+				$cadena=str_ireplace($palabra, "", $cadena);
+			}
+
+			$cadena=trim($cadena);
+			$cadena=stripslashes($cadena);
+
+			return $cadena;
+		}
 
 
-
-
-    /*----------  Funcion para ejecutar una consulta INSERT preparada  ----------*/
-    /*modelo para guardar o insertar datos */
-    protected function guardarDatos($tabla, $datos)
-    {
-        $query = "INSERT INTO $tabla (";
-
-        $C = 0;
-        foreach ($datos as $clave) {
-            if ($C >= 1) {
-                $query .= ",";
+		/*---------- Funcion verificar datos (expresion regular) ----------*/
+		protected function verificarDatos($filtro,$cadena){
+			if(preg_match("/^".$filtro."$/", $cadena)){
+				return false;
+            }else{
+                return true;
             }
-            $query .= $clave["campo_nombre"];
-            $C++;
-        }
+		}
 
-        $query .= ") VALUES(";
 
-        $C = 0;
-        foreach ($datos as $clave) {
-            if ($C >= 1) {
-                $query .= ",";
+		/*----------  Funcion para ejecutar una consulta INSERT preparada  ----------*/
+		protected function guardarDatos($tabla,$datos){
+
+			$query="INSERT INTO $tabla (";
+
+			$C=0;
+			foreach ($datos as $clave){
+				if($C>=1){ $query.=","; }
+				$query.=$clave["campo_nombre"];
+				$C++;
+			}
+			
+			$query.=") VALUES(";
+
+			$C=0;
+			foreach ($datos as $clave){
+				if($C>=1){ $query.=","; }
+				$query.=$clave["campo_marcador"];
+				$C++;
+			}
+
+			$query.=")";
+			$sql=$this->conectar()->prepare($query);
+
+			foreach ($datos as $clave){
+				$sql->bindParam($clave["campo_marcador"],$clave["campo_valor"]);
+			}
+
+			$sql->execute();
+
+			return $sql;
+		}
+
+
+		/*---------- Funcion seleccionar datos ----------*/
+        public function seleccionarDatos($tipo,$tabla,$campo,$id){
+			$tipo=$this->limpiarCadena($tipo);
+			$tabla=$this->limpiarCadena($tabla);
+			$campo=$this->limpiarCadena($campo);
+			$id=$this->limpiarCadena($id);
+
+            if($tipo=="Unico"){
+                $sql=$this->conectar()->prepare("SELECT * FROM $tabla WHERE $campo=:ID");
+                $sql->bindParam(":ID",$id);
+            }elseif($tipo=="Normal"){
+                $sql=$this->conectar()->prepare("SELECT $campo FROM $tabla");
             }
-            $query .= $clave["campo_marcador"];
-            $C++;
-        }
+            $sql->execute();
 
-        $query .= ")";
-
-        // preparamos la consulta
-        /* Metodo prepare() de la clase PDO para preparar una consulta SQL. La consulta sql
-        contiene marcadores de párametros con nombres (:name) */
-        $sql = $this->conectar()->prepare($query);
-
-        foreach ($datos as $clave) {
-            /* bindParam() --> metodo que vincula o sustituye de la consulta SQL 
-            un marcador(:name) con el valor real de una variable PHP */
-            $sql->bindParam(
-                $clave["campo_marcador"],
-                $clave["campo_valor"]
-            );
-        }
-        /* execute() Metodo que ejecuta una consulta SQL preparada */
-        $sql->execute();
-        /* devolvemos el valor de la variable $sql, para saber en el controlador
-        si hicimos o no la insercion de datos */
-        return $sql;
-    }
+            return $sql;
+		}
 
 
+		/*----------  Funcion para ejecutar una consulta UPDATE preparada  ----------*/
+		protected function actualizarDatos($tabla,$datos,$condicion){
+			
+			$query="UPDATE $tabla SET ";
 
-    /*---------- Funcion seleccionar datos ----------*/
-    public function seleccionarDatos($tipo, $tabla, $campo, $id)
-    {
-        //limpiando cadenas
-        $tipo = $this->limpiarCadena($tipo);
-        $tabla = $this->limpiarCadena($tabla);
-        $campo = $this->limpiarCadena($campo);
-        $id = $this->limpiarCadena($id);
+			$C=0;
+			foreach ($datos as $clave){
+				if($C>=1){ $query.=","; }
+				$query.=$clave["campo_nombre"]."=".$clave["campo_marcador"];
+				$C++;
+			}
 
-        if ($tipo == "Unico") {
-            /*cuando el valor sea "Unico" en el paramerto $tipo, realizamos una seleccion de datos para un usuario en especifico*/
-            //le pasamos una consulta
-            $sql = $this->conectar()->prepare("SELECT * FROM $tabla WHERE $campo=:ID");
-            /* cambiamos ese marcador por su valor real :ID->$id */
-            $sql->bindParam(":ID", $id);
-        } elseif ($tipo == "Normal") {
-            $sql = $this->conectar()->prepare("SELECT $campo  FROM $tabla");
-        }
+			$query.=" WHERE ".$condicion["condicion_campo"]."=".$condicion["condicion_marcador"];
 
-        $sql->execute();
-        return $sql;
-    }
+			$sql=$this->conectar()->prepare($query);
 
+			foreach ($datos as $clave){
+				$sql->bindParam($clave["campo_marcador"],$clave["campo_valor"]);
+			}
 
+			$sql->bindParam($condicion["condicion_marcador"],$condicion["condicion_valor"]);
 
-    /*----------  Funcion para ejecutar una consulta INSERT preparada  ----------*/
-    protected function actualizarDatos($tabla, $datos, $condicion)
-    {
+			$sql->execute();
 
-        $query = "UPDATE $tabla SET (";
-
-        $C = 0;
-        foreach ($datos as $clave) {
-            if ($C >= 1) {
-                $query .= ",";
-            }
-            $query .= $clave["campo_nombre"] . "=" . $clave["campo_marcador"];
-            $C++;
-        }
-
-        $query .= " WHERE " . $condicion["condicion_campo"] . "=" . $condicion["condicion_marcador"];
-
-        $sql = $this->conectar()->prepare($query);
-
-        foreach ($datos as $clave) {
-
-            $sql->bindParam(
-                $clave["campo_marcador"],
-                $clave["campo_valor"]
-            );
-        }
-
-        $sql->bindParam(
-            $condicion["condicion_marcador"],
-            $condicion["condicion_valor"]
-        );
-
-        $sql->execute();
-
-        return $sql;
-    }
+			return $sql;
+		}
 
 
-
-    /*---------- Funcion eliminar registro ----------*/
-    protected function eliminarRegistros($tabla, $campo, $id)
-    {
-        $sql = $this->conectar()->prepare("DELETE FROM $tabla WHERE $campo=:id");
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
-    }
-
-
-
-    /*---------- Paginador de tablas ----------*/
-    protected function paginadorTablas($pagina, $numeroPaginas, $url, $botones)
-    {
-
-        $tabla = '<nav class="pagination is-centered is-rounded" 
-        role="navigation" aria-label="pagination">';
-
-        if ($pagina <= 1) {
-            $tabla .= '
-            <a class="pagination-previous is-disabled" disabled 
-            >Anterior</a>
-            <ul class="pagination-list">
-            ';
-        } else {
-            $tabla .= '
-            <a class="pagination-previous" href="' . $url . ($pagina - 1) . '/
-            ">Anterior</a>
-            <ul class="pagination-list">
-                <li><a class="pagination-link" href="' . $url . '1/">1</a>
-                </li>
-                <li><span class="pagination-ellipsis">&hellip;</span>
-                </li>
-            ';
+		/*---------- Funcion eliminar registro ----------*/
+        protected function eliminarRegistro($tabla,$campo,$id){
+            $sql=$this->conectar()->prepare("DELETE FROM $tabla WHERE $campo=:id");
+            $sql->bindParam(":id",$id);
+            $sql->execute();
+            
+            return $sql;
         }
 
 
-        $ci = 0;
-        for ($i = $pagina; $i <= $numeroPaginas; $i++) {
-            if ($ci >= $botones) {
-                break;
-            }
+		/*---------- Paginador de tablas ----------*/
+		protected function paginadorTablas($pagina,$numeroPaginas,$url,$botones){
+	        $tabla='<nav class="pagination is-centered is-rounded" role="navigation" aria-label="pagination">';
 
-            if ($pagina == $i) {
+	        if($pagina<=1){
+	            $tabla.='
+	            <a class="pagination-previous is-disabled" disabled >Anterior</a>
+	            <ul class="pagination-list">
+	            ';
+	        }else{
+	            $tabla.='
+	            <a class="pagination-previous" href="'.$url.($pagina-1).'/">Anterior</a>
+	            <ul class="pagination-list">
+	                <li><a class="pagination-link" href="'.$url.'1/">1</a></li>
+	                <li><span class="pagination-ellipsis">&hellip;</span></li>
+	            ';
+	        }
 
-                $tabla .= '<li><a class="pagination-link is-current" 
-                href="' . $url . $i . '/">' . $i . '</a></li>';
-            } else {
-                $tabla .= '<li><a class="pagination-link" 
-                href="' . $url . $i . '/">' . $i . '</a></li>';
-            }
 
-            $ci++;
-        }
+	        $ci=0;
+	        for($i=$pagina; $i<=$numeroPaginas; $i++){
+
+	            if($ci>=$botones){
+	                break;
+	            }
+
+	            if($pagina==$i){
+	                $tabla.='<li><a class="pagination-link is-current" href="'.$url.$i.'/">'.$i.'</a></li>';
+	            }else{
+	                $tabla.='<li><a class="pagination-link" href="'.$url.$i.'/">'.$i.'</a></li>';
+	            }
+
+	            $ci++;
+	        }
 
 
-        if ($pagina == $numeroPaginas) {
+	        if($pagina==$numeroPaginas){
+	            $tabla.='
+	            </ul>
+	            <a class="pagination-next is-disabled" disabled >Siguiente</a>
+	            ';
+	        }else{
+	            $tabla.='
+	                <li><span class="pagination-ellipsis">&hellip;</span></li>
+	                <li><a class="pagination-link" href="'.$url.$numeroPaginas.'/">'.$numeroPaginas.'</a></li>
+	            </ul>
+	            <a class="pagination-next" href="'.$url.($pagina+1).'/">Siguiente</a>
+	            ';
+	        }
 
-            $tabla .= '
-            </ul>
-            <a class="pagination-next is-disabled" disabled >Siguiente
-            </a>
-            ';
-        } else {
-            $tabla .= '
-                <li><span class="pagination-ellipsis">&hellip;</span>
-                </li>
-                <li><a class="pagination-link" href="' . $url .
-                $numeroPaginas . '/">' . $numeroPaginas . '</a>
-                </li>
-            </ul>
-            <a class="pagination-next" href="' . $url . ($pagina + 1) . '/">Siguiente
-            </a>
-            ';
-        }
-
-        $tabla .= '
-            </nav>
-        ';
-        return $tabla;
-    }
-}
+	        $tabla.='</nav>';
+	        return $tabla;
+	    }
+	    
+	}
 
 
 
